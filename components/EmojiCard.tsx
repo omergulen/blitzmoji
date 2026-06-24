@@ -89,8 +89,6 @@ export const EmojiCard = memo(function EmojiCard({
       title={`${code} — click to copy`}
       aria-label={`${record.name}, ${code}`}
     >
-      {record.animated && <span className="gifdot">GIF</span>}
-
       {src ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img className="tile-img" src={src} alt={record.name} loading="lazy" decoding="async" />
