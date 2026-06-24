@@ -69,6 +69,21 @@ describe("createSearch", () => {
     expect(res.map((r) => r.id)).toEqual(["slackmojis:3"]);
   });
 
+  it("does not leak near-spellings on a literal match (parrot != carrot)", () => {
+    const withCarrot = [...catalog, rec({ id: "u:carrot", name: "carrot", tags: ["carrot", "veg"] })];
+    const { query } = createSearch(withCarrot);
+    const res = query("parrot");
+    expect(res.map((r) => r.id)).not.toContain("u:carrot");
+    expect(res[0].name).toMatch(/parrot/);
+  });
+
+  it("falls back to fuzzy matching only when nothing matches literally", () => {
+    const { query } = createSearch(catalog);
+    // "parot" is a typo: no literal hit, fuzzy should still surface the parrots.
+    const ids = query("parot").map((r) => r.id);
+    expect(ids).toContain("slackmojis:1");
+  });
+
   it("combines text query with filters", () => {
     const { query } = createSearch(catalog);
     const res = query("parrot", { animatedOnly: true });

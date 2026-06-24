@@ -21,6 +21,11 @@ import { getSupabase } from "@/lib/supabase";
 
 const require = createRequire(import.meta.url);
 const SLACKMOJIS_URL = "https://slackmojis.com/emojis.json";
+// Slackmojis has 100k+ community uploads (mostly long-tail). For a fast,
+// client-side-searchable showcase we ship a curated slice; the full set is
+// available by raising this (and moving search server-side). Override with
+// SLACKMOJIS_PAGES env in the ingest workflow.
+const MAX_PAGES = Number(process.env.SLACKMOJIS_PAGES) || 20; // 500/page → ~10k
 const OUT = path.join(process.cwd(), "public", "catalog.json");
 
 function prettyGroup(slug: string | undefined): string | null {
@@ -31,16 +36,26 @@ function prettyGroup(slug: string | undefined): string | null {
     .join(" ");
 }
 
+/** Fetch every Slackmojis page, deduped by id. Stops when a page adds nothing new. */
 async function fetchSlackmojis(): Promise<SlackmojiRaw[]> {
+  const byId = new Map<number, SlackmojiRaw>();
   try {
-    const res = await fetch(SLACKMOJIS_URL, {
-      headers: { "User-Agent": "Blitzmoji/1.0 (+https://github.com)" },
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return (await res.json()) as SlackmojiRaw[];
+    for (let page = 1; page <= MAX_PAGES; page++) {
+      const res = await fetch(`${SLACKMOJIS_URL}?page=${page}`, {
+        headers: { "User-Agent": "Blitzmoji/1.0 (+https://github.com)" },
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status} on page ${page}`);
+      const batch = (await res.json()) as SlackmojiRaw[];
+      if (batch.length === 0) break;
+      const before = byId.size;
+      for (const e of batch) byId.set(e.id, e);
+      if (byId.size === before) break; // no new ids -> reached the end
+      if (page % 10 === 0) console.log(`  …fetched ${byId.size} slackmojis`);
+    }
+    return Array.from(byId.values());
   } catch (err) {
-    console.warn(`! Slackmojis fetch failed (${(err as Error).message}); Unicode only.`);
-    return [];
+    console.warn(`! Slackmojis fetch failed (${(err as Error).message}).`);
+    return Array.from(byId.values()); // keep whatever we got
   }
 }
 

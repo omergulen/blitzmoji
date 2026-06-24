@@ -1,26 +1,320 @@
 @import "tailwindcss";
 
+/* ============================================================
+   Blitzmoji — "Emoji Command Console"
+   Deep warm-indigo void, duotone electric magenta + cyan.
+   Chrome stays quiet; the emoji art carries the color.
+   ============================================================ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --void: #0b0a12;
+  --void-2: #0f0d1a;
+  --panel-solid: #161424;
+  --raise: #1d1a30;
+  --ink: #eceaf6;
+  --muted: #8d88ad;
+  --faint: #5a5677;
+  --line: rgba(255, 255, 255, 0.07);
+  --line-2: rgba(255, 255, 255, 0.12);
+  --bolt: #ff2e97; /* electric magenta */
+  --volt: #18e0e8; /* electric cyan */
+  --bolt-soft: rgba(255, 46, 151, 0.16);
+  --volt-soft: rgba(24, 224, 232, 0.14);
+  --radius: 14px;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-void: var(--void);
+  --color-panel: var(--panel-solid);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-bolt: var(--bolt);
+  --color-volt: var(--volt);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-display);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background: var(--void);
+  color: var(--ink);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background:
+    radial-gradient(900px 480px at 18% -8%, var(--bolt-soft), transparent 60%),
+    radial-gradient(900px 520px at 88% -12%, var(--volt-soft), transparent 60%),
+    var(--void);
+  background-attachment: fixed;
+}
+
+::selection {
+  background: var(--bolt);
+  color: #fff;
+}
+
+/* --- type --- */
+.font-display {
+  font-family: var(--font-display), var(--font-geist-sans), sans-serif;
+  letter-spacing: -0.02em;
+}
+.mono {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+/* --- wordmark --- */
+.wordmark {
+  font-family: var(--font-display), sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  font-size: clamp(1.15rem, 2.4vw, 1.5rem);
+}
+.wordmark .blitz {
+  background: linear-gradient(100deg, var(--bolt), var(--volt));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* --- hero --- */
+.hero-title {
+  font-family: var(--font-display), sans-serif;
+  font-weight: 800;
+  line-height: 0.96;
+  letter-spacing: -0.035em;
+  font-size: clamp(2.4rem, 7vw, 5rem);
+}
+.hero-grad {
+  background: linear-gradient(105deg, var(--ink) 30%, var(--bolt) 64%, var(--volt) 96%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* --- the command console (search) --- */
+.console {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.95rem 1.1rem;
+  background: linear-gradient(180deg, var(--raise), var(--panel-solid));
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  box-shadow: 0 18px 50px -28px rgba(0, 0, 0, 0.9);
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.console:focus-within {
+  border-color: transparent;
+  box-shadow:
+    0 0 0 1px var(--bolt),
+    0 0 0 4px var(--bolt-soft),
+    0 18px 60px -26px rgba(255, 46, 151, 0.5);
+}
+.console input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--ink);
+  font-size: clamp(1.05rem, 2.4vw, 1.35rem);
+  font-family: var(--font-geist-sans), sans-serif;
+}
+.console input::placeholder {
+  color: var(--faint);
+}
+.kbd {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.72rem;
+  color: var(--muted);
+  border: 1px solid var(--line-2);
+  border-radius: 7px;
+  padding: 0.15rem 0.45rem;
+  background: rgba(255, 255, 255, 0.03);
+  white-space: nowrap;
+}
+
+.bolt {
+  color: var(--bolt);
+  filter: drop-shadow(0 0 6px var(--bolt-soft));
+}
+
+/* --- chips / filters --- */
+.chip {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.8rem;
+  color: var(--muted);
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.02);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.chip:hover {
+  color: var(--ink);
+  border-color: var(--line-2);
+}
+.chip[data-on="true"] {
+  color: #fff;
+  border-color: transparent;
+  background: linear-gradient(100deg, var(--bolt), var(--volt));
+}
+
+/* --- emoji tile --- */
+.tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.015);
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.tile:hover,
+.tile:focus-visible {
+  transform: translateY(-3px);
+  border-color: var(--bolt);
+  background: rgba(255, 46, 151, 0.06);
+  outline: none;
+}
+.tile-img {
+  width: 56%;
+  height: 56%;
+  object-fit: contain;
+  image-rendering: -webkit-optimize-contrast;
+}
+.tile-glyph {
+  font-size: clamp(1.6rem, 6vw, 2.4rem);
+  line-height: 1;
+}
+.tile-name {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0.3rem 0.4rem;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.62rem;
+  color: var(--muted);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: linear-gradient(180deg, transparent, var(--void) 75%);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.tile:hover .tile-name,
+.tile:focus-visible .tile-name {
+  opacity: 1;
+}
+
+/* quick actions on the tile */
+.tile-actions {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: all 0.15s ease;
+}
+.tile:hover .tile-actions,
+.tile:focus-within .tile-actions {
+  opacity: 1;
+  transform: translateY(0);
+}
+.act {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  border: 1px solid var(--line-2);
+  background: rgba(11, 10, 18, 0.82);
+  color: var(--muted);
+  backdrop-filter: blur(6px);
+}
+.act:hover {
+  color: #fff;
+  border-color: var(--bolt);
+  background: var(--bolt);
+}
+.act svg {
+  width: 14px;
+  height: 14px;
+}
+
+.gifdot {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.04em;
+  color: var(--volt);
+  border: 1px solid var(--volt-soft);
+  background: rgba(24, 224, 232, 0.08);
+  border-radius: 6px;
+  padding: 0.05rem 0.3rem;
+}
+
+/* --- toast --- */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%) translateY(8px);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.1rem;
+  border-radius: 12px;
+  border: 1px solid var(--bolt);
+  background: rgba(20, 18, 36, 0.95);
+  color: var(--ink);
+  box-shadow: 0 0 0 4px var(--bolt-soft), 0 20px 50px -20px #000;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.85rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  z-index: 60;
+}
+.toast[data-show="true"] {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.eyebrow {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+a.link {
+  color: var(--volt);
+  text-decoration: none;
+}
+a.link:hover {
+  text-decoration: underline;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
 }

@@ -1,65 +1,154 @@
-import Image from "next/image";
+"use client";
+
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import type { EmojiRecord } from "@/lib/types";
+import { loadCatalog, categoriesOf } from "@/lib/catalog";
+import { createSearch, type SearchFilters } from "@/lib/search";
+import { SearchBar } from "@/components/SearchBar";
+import { Filters } from "@/components/Filters";
+import { EmojiGrid } from "@/components/EmojiGrid";
+import { Trending } from "@/components/Trending";
 
 export default function Home() {
+  const [catalog, setCatalog] = useState<EmojiRecord[] | null>(null);
+  const [query, setQuery] = useState("");
+  const [filters, setFilters] = useState<SearchFilters>({ source: "all" });
+  const [toast, setToast] = useState<string>("");
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    loadCatalog().then(setCatalog).catch(() => setCatalog([]));
+  }, []);
+
+  const search = useMemo(() => (catalog ? createSearch(catalog) : null), [catalog]);
+  const categories = useMemo(() => (catalog ? categoriesOf(catalog) : []), [catalog]);
+
+  const deferredQuery = useDeferredValue(query);
+  const results = useMemo(
+    () => (search ? search.query(deferredQuery, filters) : []),
+    [search, deferredQuery, filters],
+  );
+
+  const showToast = useCallback((msg: string) => {
+    setToast(msg);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(""), 1800);
+  }, []);
+
+  const byId = useMemo(() => {
+    const m = new Map<string, EmojiRecord>();
+    if (catalog) for (const r of catalog) m.set(r.id, r);
+    return m;
+  }, [catalog]);
+
+  const isSearching = query.trim().length > 0;
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main style={{ width: "100%", maxWidth: 1200, margin: "0 auto", padding: "0 20px 80px" }}>
+      <header
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "22px 0",
+        }}
+      >
+        <div className="wordmark">
+          <span className="blitz">blitz</span>
+          <span>moji</span>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+        <a
+          className="kbd"
+          href="https://slackmojis.com"
+          target="_blank"
+          rel="noreferrer noopener"
+          style={{ textDecoration: "none" }}
+        >
+          emoji via slackmojis ↗
+        </a>
+      </header>
+
+      <section style={{ paddingTop: "clamp(24px, 7vw, 70px)", paddingBottom: 28, maxWidth: 760 }}>
+        <p className="eyebrow" style={{ marginBottom: 14 }}>
+          every slack emoji · zero login
+        </p>
+        <h1 className="hero-title">
+          Find any emoji at <span className="hero-grad">the speed of light.</span>
+        </h1>
+        <p
+          style={{
+            marginTop: 18,
+            color: "var(--muted)",
+            fontSize: "clamp(1rem, 2.2vw, 1.15rem)",
+            maxWidth: 540,
+          }}
+        >
+          Thousands of Slack-style and Unicode emoji, searchable instantly. Click to copy, grab the{" "}
+          <span className="mono" style={{ color: "var(--ink)" }}>:shortcode:</span>, or download —
+          no account, no friction.
+        </p>
+      </section>
+
+      {catalog === null ? (
+        <p className="mono" style={{ color: "var(--faint)", padding: "2rem 0" }}>
+          ⚡ charging the catalog…
+        </p>
+      ) : (
+        <>
+          <div
+            style={{
+              position: "sticky",
+              top: 0,
+              zIndex: 20,
+              paddingTop: 8,
+              paddingBottom: 14,
+              background: "linear-gradient(180deg, var(--void) 72%, transparent)",
+            }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
+            <SearchBar value={query} onChange={setQuery} count={results.length} />
+            <div style={{ marginTop: 14 }}>
+              <Filters filters={filters} onChange={setFilters} categories={categories} />
+            </div>
+          </div>
+
+          {!isSearching && <Trending byId={byId} onToast={showToast} />}
+
+          <section style={{ marginTop: 22 }}>
+            <p className="eyebrow" style={{ marginBottom: 14 }}>
+              {isSearching ? `results for “${query}”` : "all emoji"}
+            </p>
+            <EmojiGrid records={results} onToast={showToast} />
+          </section>
+        </>
+      )}
+
+      <footer
+        style={{
+          marginTop: 64,
+          paddingTop: 24,
+          borderTop: "1px solid var(--line)",
+          color: "var(--faint)",
+          fontSize: "0.82rem",
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 8,
+          justifyContent: "space-between",
+        }}
+      >
+        <span className="mono">blitzmoji — built for speed ⚡</span>
+        <span>
+          Custom emoji are community works via{" "}
+          <a className="link" href="https://slackmojis.com" target="_blank" rel="noreferrer noopener">
+            Slackmojis
           </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+          . Takedown: open an issue on GitHub.
+        </span>
+      </footer>
+
+      <div className="toast" data-show={Boolean(toast)} role="status" aria-live="polite">
+        <span className="bolt">⚡</span>
+        {toast}
+      </div>
+    </main>
   );
 }
