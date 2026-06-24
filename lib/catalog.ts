@@ -13,3 +13,20 @@ export function categoriesOf(records: EmojiRecord[]): string[] {
   for (const r of records) if (r.category) set.add(r.category);
   return Array.from(set).sort();
 }
+
+export interface CategoryCount {
+  category: string;
+  count: number;
+}
+
+/** Every category with its emoji count, most populous first. */
+export function categoryCounts(records: EmojiRecord[]): CategoryCount[] {
+  const counts = new Map<string, number>();
+  for (const r of records) {
+    if (!r.category) continue;
+    counts.set(r.category, (counts.get(r.category) ?? 0) + 1);
+  }
+  return Array.from(counts, ([category, count]) => ({ category, count })).sort(
+    (a, b) => b.count - a.count,
+  );
+}

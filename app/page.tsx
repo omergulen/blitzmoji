@@ -2,13 +2,13 @@
 
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import type { EmojiRecord } from "@/lib/types";
-import { loadCatalog } from "@/lib/catalog";
+import { loadCatalog, categoryCounts } from "@/lib/catalog";
 import { featureSort } from "@/lib/featured";
 import { createSearch, type SearchFilters } from "@/lib/search";
 import { DEFAULT_PACK, packByKey } from "@/lib/packs";
 import { SearchBar } from "@/components/SearchBar";
 import { Filters } from "@/components/Filters";
-import { Packs } from "@/components/Packs";
+import { Packs, CAT_PREFIX } from "@/components/Packs";
 import { EmojiGrid } from "@/components/EmojiGrid";
 
 export default function Home() {
@@ -36,8 +36,12 @@ export default function Home() {
     return m;
   }, [catalog]);
 
+  const categories = useMemo(() => (catalog ? categoryCounts(catalog) : []), [catalog]);
+
   const deferredQuery = useDeferredValue(query);
   const isSearching = query.trim().length > 0;
+  const isCategory = pack.startsWith(CAT_PREFIX);
+  const categoryName = isCategory ? pack.slice(CAT_PREFIX.length) : null;
   const activePack = packByKey(pack);
 
   const passSA = useCallback(
@@ -53,6 +57,9 @@ export default function Home() {
 
     if (isSearching) return search.query(deferredQuery, base); // search ignores pack
 
+    if (isCategory && categoryName) {
+      return search.query("", { ...base, categories: [categoryName] });
+    }
     if (activePack.special === "trending") {
       const recs = (trendingIds ?? [])
         .map((id) => byId.get(id))
@@ -65,7 +72,7 @@ export default function Home() {
       return search.query("", { ...base, categories: activePack.categories });
     }
     return search.query("", base); // featured (default order)
-  }, [search, isSearching, deferredQuery, filters, activePack, trendingIds, byId, passSA]);
+  }, [search, isSearching, deferredQuery, filters, activePack, isCategory, categoryName, trendingIds, byId, passSA]);
 
   const showToast = useCallback((msg: string) => {
     setToast(msg);
@@ -77,7 +84,9 @@ export default function Home() {
 
   const sectionLabel = isSearching
     ? `results for “${query.trim()}”`
-    : `${activePack.icon} ${activePack.label.toLowerCase()}`;
+    : isCategory && categoryName
+      ? `📁 ${categoryName.toLowerCase()}`
+      : `${activePack.icon} ${activePack.label.toLowerCase()}`;
 
   return (
     <main style={{ width: "100%", maxWidth: 1200, margin: "0 auto", padding: "0 20px 80px" }}>
@@ -125,7 +134,7 @@ export default function Home() {
 
           {!isSearching && (
             <div style={{ marginTop: 18 }}>
-              <Packs active={pack} onSelect={setPack} />
+              <Packs active={pack} onSelect={setPack} categories={categories} />
             </div>
           )}
 
