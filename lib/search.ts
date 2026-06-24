@@ -5,6 +5,8 @@ export interface SearchFilters {
   source?: EmojiSource | "all";
   animatedOnly?: boolean;
   category?: string | null;
+  /** Restrict to records whose category is one of these (used by packs). */
+  categories?: string[];
 }
 
 export interface Search {
@@ -16,6 +18,9 @@ function passesFilters(r: EmojiRecord, f?: SearchFilters): boolean {
   if (f.source && f.source !== "all" && r.source !== f.source) return false;
   if (f.animatedOnly && !r.animated) return false;
   if (f.category && r.category !== f.category) return false;
+  if (f.categories && f.categories.length > 0) {
+    if (!r.category || !f.categories.includes(r.category)) return false;
+  }
   return true;
 }
 
