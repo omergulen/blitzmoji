@@ -1,0 +1,47 @@
+name: Ingest emoji catalog
+
+on:
+  workflow_dispatch:
+    inputs:
+      pages:
+        description: "Slackmojis pages to fetch (500/page)"
+        default: "20"
+  schedule:
+    - cron: "0 6 * * 1" # weekly, Mondays 06:00 UTC
+
+permissions:
+  contents: write
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Run ingestion
+        run: npm run ingest
+        env:
+          SLACKMOJIS_PAGES: ${{ github.event.inputs.pages || '20' }}
+          # Optional — set as repo secrets to enable R2 mirroring + Supabase upsert:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          R2_PUBLIC_BASE_URL: ${{ secrets.R2_PUBLIC_BASE_URL }}
+      - name: Commit refreshed catalog
+        run: |
+          git config user.name "blitzmoji-bot"
+          git config user.email "bot@blitzmoji.local"
+          if ! git diff --quiet -- public/catalog.json; then
+            git add public/catalog.json
+            git commit -m "chore: refresh emoji catalog [skip ci]"
+            git push
+          else
+            echo "Catalog unchanged."
+          fi
