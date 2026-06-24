@@ -2,38 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { EmojiRecord } from "@/lib/types";
+import { pickFeatured } from "@/lib/featured";
 import { EmojiCard } from "./EmojiCard";
-
-// Shown before live data exists (or when the DB is unconfigured): a hand-picked
-// set of internet favourites, falling back to whatever the catalog has.
-const CURATED = [
-  "party-parrot", "parrot", "this-is-fine", "thinking", "blob-dance", "yay",
-  "doge", "rocket", "tada", "fire", "100", "eyes", "rickroll", "nyan-cat",
-  "meow-party", "shipit", "pepe", "feelsgoodman",
-];
-
-function pickFallback(records: EmojiRecord[]): EmojiRecord[] {
-  const byShort = new Map<string, EmojiRecord>();
-  for (const r of records) for (const s of r.shortcodes) if (!byShort.has(s)) byShort.set(s, r);
-  const picked: EmojiRecord[] = [];
-  const seen = new Set<string>();
-  for (const name of CURATED) {
-    const hit = byShort.get(name);
-    if (hit && !seen.has(hit.id)) {
-      picked.push(hit);
-      seen.add(hit.id);
-    }
-  }
-  // Pad with leading slackmojis so the strip is never sparse.
-  for (const r of records) {
-    if (picked.length >= 18) break;
-    if (r.source === "slackmojis" && !seen.has(r.id)) {
-      picked.push(r);
-      seen.add(r.id);
-    }
-  }
-  return picked.slice(0, 18);
-}
 
 export function Trending({
   byId,
@@ -61,7 +31,7 @@ export function Trending({
       const live = liveIds.map((id) => byId.get(id)).filter(Boolean) as EmojiRecord[];
       if (live.length >= 6) return live.slice(0, 18);
     }
-    return pickFallback(all);
+    return pickFeatured(all, 18);
   }, [byId, liveIds]);
 
   if (records.length === 0) return null;

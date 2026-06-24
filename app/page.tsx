@@ -3,6 +3,7 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import type { EmojiRecord } from "@/lib/types";
 import { loadCatalog, categoriesOf } from "@/lib/catalog";
+import { featureSort } from "@/lib/featured";
 import { createSearch, type SearchFilters } from "@/lib/search";
 import { SearchBar } from "@/components/SearchBar";
 import { Filters } from "@/components/Filters";
@@ -20,7 +21,9 @@ export default function Home() {
     loadCatalog().then(setCatalog).catch(() => setCatalog([]));
   }, []);
 
-  const search = useMemo(() => (catalog ? createSearch(catalog) : null), [catalog]);
+  // Featured-first ordering so the default grid leads with recognizable emoji.
+  const ordered = useMemo(() => (catalog ? featureSort(catalog) : null), [catalog]);
+  const search = useMemo(() => (ordered ? createSearch(ordered) : null), [ordered]);
   const categories = useMemo(() => (catalog ? categoriesOf(catalog) : []), [catalog]);
 
   const deferredQuery = useDeferredValue(query);

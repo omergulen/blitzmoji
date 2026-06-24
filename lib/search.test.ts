@@ -77,6 +77,12 @@ describe("createSearch", () => {
     expect(res[0].name).toMatch(/parrot/);
   });
 
+  it("matches multi-word queries against dashless names (party parrot -> party-parrot)", () => {
+    const { query } = createSearch(catalog);
+    expect(query("party parrot").map((r) => r.id)).toContain("slackmojis:1");
+    expect(query("PARTY-PARROT").map((r) => r.id)).toContain("slackmojis:1");
+  });
+
   it("falls back to fuzzy matching only when nothing matches literally", () => {
     const { query } = createSearch(catalog);
     // "parot" is a typo: no literal hit, fuzzy should still surface the parrots.

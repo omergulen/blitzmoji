@@ -24,18 +24,22 @@ function passesFilters(r: EmojiRecord, f?: SearchFilters): boolean {
  * Empty queries return all records in original (catalog) order; non-empty
  * queries return Fuse-ranked results. Filters apply in both cases.
  */
+/** Collapse to lowercase alphanumerics so "party parrot" == "party-parrot" == "partyparrot". */
+function norm(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+
 /**
- * Literal-match rank for a record against a lowercased query, or null if it
- * doesn't match at all. Lower is better:
+ * Literal-match rank for a record against a query, or null if it doesn't match.
+ * Matching is punctuation/space-insensitive (normalized). Lower is better:
  *   0  exact name/shortcode    1  prefix match    2  substring (incl. tags)
  */
-function literalRank(r: EmojiRecord, q: string): number | null {
-  const name = r.name.toLowerCase();
-  const shorts = r.shortcodes.map((s) => s.toLowerCase());
-  if (name === q || shorts.includes(q)) return 0;
-  if (name.startsWith(q) || shorts.some((s) => s.startsWith(q))) return 1;
-  if (name.includes(q) || shorts.some((s) => s.includes(q))) return 2;
-  if (r.tags.some((t) => t.toLowerCase().includes(q))) return 2;
+function literalRank(r: EmojiRecord, qNorm: string): number | null {
+  const names = [r.name, ...r.shortcodes];
+  for (const n of names) if (norm(n) === qNorm) return 0;
+  for (const n of names) if (norm(n).startsWith(qNorm)) return 1;
+  for (const n of names) if (norm(n).includes(qNorm)) return 2;
+  for (const t of r.tags) if (norm(t).includes(qNorm)) return 2;
   return null;
 }
 
@@ -54,15 +58,15 @@ export function createSearch(records: EmojiRecord[]): Search {
 
   return {
     query(q: string, filters?: SearchFilters): EmojiRecord[] {
-      const trimmed = q.trim().toLowerCase();
+      const qNorm = norm(q);
       let base: EmojiRecord[];
-      if (!trimmed) {
+      if (!qNorm) {
         base = records;
       } else {
         // Precise: literal matches, best rank first, catalog order as tiebreak.
         const hits: { r: EmojiRecord; rank: number; i: number }[] = [];
         records.forEach((r, i) => {
-          const rank = literalRank(r, trimmed);
+          const rank = literalRank(r, qNorm);
           if (rank !== null) hits.push({ r, rank, i });
         });
         if (hits.length > 0) {
@@ -70,7 +74,7 @@ export function createSearch(records: EmojiRecord[]): Search {
           base = hits.map((h) => h.r);
         } else {
           // Forgiving: typo-tolerant fuzzy fallback.
-          base = fuse.search(trimmed).map((res) => res.item);
+          base = fuse.search(q.trim()).map((res) => res.item);
         }
       }
       return filters ? base.filter((r) => passesFilters(r, filters)) : base;
