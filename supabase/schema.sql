@@ -1,5 +1,10 @@
 -- Blitzmoji schema. Apply to a Supabase project, then set NEXT_PUBLIC_SUPABASE_URL
 -- and NEXT_PUBLIC_SUPABASE_ANON_KEY in the app to enable live trending.
+--
+-- emoji_stats is intentionally standalone (no FK to a catalog table): the client
+-- already knows every emoji from the static catalog and maps trending ids to it,
+-- so counters can be recorded for any id without a prior insert. The emojis table
+-- is an optional canonical store (handy for R2 mirroring later).
 
 create table if not exists emojis (
   id          text primary key,
@@ -18,7 +23,7 @@ create table if not exists emojis (
 );
 
 create table if not exists emoji_stats (
-  emoji_id   text primary key references emojis(id) on delete cascade,
+  emoji_id   text primary key,
   copies     bigint not null default 0,
   downloads  bigint not null default 0,
   updated_at timestamptz not null default now()
@@ -55,12 +60,17 @@ stable
 security definer
 set search_path = public
 as $$
-  select s.emoji_id as id, (s.copies + s.downloads) as score
-  from emoji_stats s
-  join emojis e on e.id = s.emoji_id
-  order by score desc, s.updated_at desc
+  select emoji_id as id, (copies + downloads) as score
+  from emoji_stats
+  order by score desc, updated_at desc
   limit greatest(1, least(p_limit, 100));
 $$;
+
+-- Anyone (anon) may read aggregate stats and call the functions; nobody writes
+-- the tables directly.
+alter table emoji_stats enable row level security;
+drop policy if exists emoji_stats_read on emoji_stats;
+create policy emoji_stats_read on emoji_stats for select to anon, authenticated using (true);
 
 grant execute on function increment_stat(text, text) to anon, authenticated;
 grant execute on function get_trending(int) to anon, authenticated;
