@@ -41,6 +41,7 @@ yarn-error.log*
 next-env.d.ts
 
 # blitzmoji
-public/catalog.json
+# catalog.json IS committed: it's the shipped search index, refreshed by the
+# scheduled ingest GitHub Action (keeps deploys deterministic & outage-proof).
 .env*.local
 .vercel
