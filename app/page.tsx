@@ -118,8 +118,10 @@ export default function Home() {
           Find any emoji at <span className="hero-grad">the speed of light.</span>
         </h1>
         <p style={{ marginTop: 16, color: "var(--muted)", fontSize: "clamp(1rem, 2.2vw, 1.15rem)", maxWidth: 540 }}>
-          Thousands of Slack-style and Unicode emoji, searchable instantly. Click to copy, grab the{" "}
-          <span className="mono" style={{ color: "var(--ink)" }}>:shortcode:</span>, or download —
+          Thousands of Slack-style and Unicode emoji, searchable instantly. Copy, grab the{" "}
+          <span className="mono" style={{ color: "var(--ink)" }}>:shortcode:</span>, or hit{" "}
+          <span className="mono" style={{ color: "var(--ink)" }}>+</span> to add it straight to{" "}
+          <span style={{ color: "var(--ink)" }}>Slack, Discord, Telegram &amp; WhatsApp</span> —
           no account, no friction.
         </p>
       </section>

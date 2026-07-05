@@ -24,11 +24,21 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE),
   title: "Blitzmoji — every Slack emoji, found at the speed of light",
   description:
-    "Search thousands of Slack-style and Unicode emoji instantly. Copy, download, and grab the :shortcode: in one keystroke. No login.",
-  keywords: ["slack emoji", "slackmojis", "emoji search", "party parrot", "custom emoji"],
+    "Search thousands of Slack-style and Unicode emoji instantly, then add them to Slack, Discord, Telegram or WhatsApp in one click — the right file format and size prepared for you. No login.",
+  keywords: [
+    "slack emoji",
+    "slackmojis",
+    "emoji search",
+    "party parrot",
+    "custom emoji",
+    "telegram stickers",
+    "whatsapp stickers",
+    "discord emoji",
+  ],
   openGraph: {
     title: "Blitzmoji",
-    description: "Every Slack emoji, found at the speed of light.",
+    description:
+      "Every Slack emoji, found at the speed of light — and added to Slack, Discord, Telegram & WhatsApp in one click.",
     url: SITE,
     siteName: "Blitzmoji",
     type: "website",

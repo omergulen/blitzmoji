@@ -2,7 +2,8 @@
 
 **Every Slack emoji, found at the speed of light.** Search thousands of
 Slack-style and Unicode emoji instantly, then copy, grab the `:shortcode:`, or
-download — no account, no friction.
+add it straight to **Slack, Discord, Telegram & WhatsApp** — no account, no
+friction.
 
 Built with Next.js (App Router) on Vercel, Cloudflare R2, and Supabase.
 
@@ -11,12 +12,21 @@ Built with Next.js (App Router) on Vercel, Cloudflare R2, and Supabase.
 - **Catalog** — `scripts/ingest` pulls the full Slackmojis feed (paginated) plus
   the Unicode set (`emojibase-data`), normalizes both to one `EmojiRecord`
   shape, and writes a compact static `public/catalog.json` (the shipped search
-  index). The committed catalog is curated to ~10k Slackmojis so the whole index
-  loads in one ~380KB gzipped request and search stays instant.
+  index). The committed catalog is ~12k emoji (10k Slackmojis + ~2k Unicode) and
+  loads in one ~380KB gzipped request, so search stays instant.
 - **Search** — runs entirely client-side: a substring-first match (precise),
   falling back to fuzzy (Fuse.js) only for typos. Zero network per keystroke.
+- **Collections** — Slackmojis dumps ~67% of emoji into a catch-all "Random"
+  category, so `lib/collections.ts` re-groups the whole catalog by keyword into
+  chat-relevant themes (Reactions, Animals, Celebrate, Tech, Food, Hype, Love,
+  Hands, Memes, Pride) that surface as one-tap packs.
+- **Add to chat** — the `+` on any tile opens an export flow that prepares the
+  right file for each target: the original image for Slack/Discord custom emoji,
+  and a canvas-resized **512×512 sticker** (PNG for Telegram, WebP for WhatsApp).
+  Each platform gets a deep link (Slack workspace admin, `@Stickers` bot) and
+  the exact steps. See `lib/platforms.ts` / `components/ExportModal.tsx`.
 - **Grid** — virtualized (`@tanstack/react-virtual`), so thousands of GIFs
-  scroll smoothly. Hover a tile to copy the image, copy `:shortcode:`, or
+  scroll smoothly. Hover a tile to add-to-chat, copy `:shortcode:`, or
   download.
 - **Images** — served through a same-origin cached proxy (`/img`) so clipboard
   copy works cross-origin and third-party hosts aren't hotlinked from the
