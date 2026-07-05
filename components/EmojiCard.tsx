@@ -32,13 +32,23 @@ function TagIcon() {
     </svg>
   );
 }
+function AddIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+      <path d="M12 5v14" />
+      <path d="M5 12h14" />
+    </svg>
+  );
+}
 
 export const EmojiCard = memo(function EmojiCard({
   record,
   onToast,
+  onAdd,
 }: {
   record: EmojiRecord;
   onToast: (msg: string) => void;
+  onAdd: (record: EmojiRecord) => void;
 }) {
   const src = imgSrc(record);
   const code = shortcodeText(record);
@@ -70,6 +80,14 @@ export const EmojiCard = memo(function EmojiCard({
     [code, record.id, onToast],
   );
 
+  const add = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onAdd(record);
+    },
+    [record, onAdd],
+  );
+
   const download = useCallback(
     async (e: React.MouseEvent) => {
       e.stopPropagation();
@@ -97,6 +115,9 @@ export const EmojiCard = memo(function EmojiCard({
       )}
 
       <span className="tile-actions">
+        <span className="act act-add" role="button" tabIndex={-1} onClick={add} title="Add to Slack, Telegram, WhatsApp…">
+          <AddIcon />
+        </span>
         <span className="act" role="button" tabIndex={-1} onClick={copyCode} title={`Copy ${code}`}>
           <TagIcon />
         </span>

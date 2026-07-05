@@ -10,6 +10,7 @@ import { SearchBar } from "@/components/SearchBar";
 import { Filters } from "@/components/Filters";
 import { Packs, CAT_PREFIX } from "@/components/Packs";
 import { EmojiGrid } from "@/components/EmojiGrid";
+import { ExportModal } from "@/components/ExportModal";
 
 export default function Home() {
   const [catalog, setCatalog] = useState<EmojiRecord[] | null>(null);
@@ -18,6 +19,7 @@ export default function Home() {
   const [pack, setPack] = useState<string>(DEFAULT_PACK);
   const [trendingIds, setTrendingIds] = useState<string[] | null>(null);
   const [toast, setToast] = useState<string>("");
+  const [adding, setAdding] = useState<EmojiRecord | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -142,7 +144,7 @@ export default function Home() {
             <p className="eyebrow" style={{ marginBottom: 14 }}>
               {sectionLabel}
             </p>
-            <EmojiGrid records={results} onToast={showToast} />
+            <EmojiGrid records={results} onToast={showToast} onAdd={setAdding} />
           </section>
         </>
       )}
@@ -166,6 +168,8 @@ export default function Home() {
         <span className="bolt">⚡</span>
         {toast}
       </div>
+
+      <ExportModal record={adding} onClose={() => setAdding(null)} onToast={showToast} />
     </main>
   );
 }

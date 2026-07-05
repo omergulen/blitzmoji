@@ -11,9 +11,11 @@ const MIN_TILE = 104;
 export function EmojiGrid({
   records,
   onToast,
+  onAdd,
 }: {
   records: EmojiRecord[];
   onToast: (msg: string) => void;
+  onAdd: (record: EmojiRecord) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
@@ -75,7 +77,7 @@ export function EmojiGrid({
                 }}
               >
                 {items.map((rec) => (
-                  <EmojiCard key={rec.id} record={rec} onToast={onToast} />
+                  <EmojiCard key={rec.id} record={rec} onToast={onToast} onAdd={onAdd} />
                 ))}
               </div>
             );
