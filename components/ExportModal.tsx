@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { EmojiRecord } from "@/lib/types";
 import { imgSrc, shortcodeText } from "@/lib/images";
 import { copyText } from "@/lib/clipboard";
@@ -35,10 +35,12 @@ export function ExportModal({
     }
   });
   const [busy, setBusy] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
-  // Close on Escape.
+  // Close on Escape; move focus into the dialog when it opens.
   useEffect(() => {
     if (!record) return;
+    dialogRef.current?.focus();
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -95,6 +97,8 @@ export function ExportModal({
         role="dialog"
         aria-modal="true"
         aria-label={`Add ${base} to a chat app`}
+        ref={dialogRef}
+        tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
       >
         <button className="modal-x" onClick={onClose} aria-label="Close" type="button">

@@ -360,6 +360,18 @@ body {
 .tile:focus-within .tile-actions {
   opacity: 1;
 }
+
+/* Touch devices have no hover — keep the actions + label reachable there so the
+   "+" add-to-chat button (the whole point on mobile, where stickers live) and
+   the shortcode are always tappable. */
+@media (hover: none), (pointer: coarse) {
+  .tile-actions {
+    opacity: 1;
+  }
+  .tile-name {
+    opacity: 1;
+  }
+}
 .act {
   display: grid;
   place-items: center;
