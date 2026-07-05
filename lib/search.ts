@@ -1,5 +1,6 @@
 import Fuse from "fuse.js";
 import type { EmojiRecord, EmojiSource } from "./types";
+import { inCollection } from "./collections";
 
 export interface SearchFilters {
   source?: EmojiSource | "all";
@@ -7,6 +8,8 @@ export interface SearchFilters {
   category?: string | null;
   /** Restrict to records whose category is one of these (used by packs). */
   categories?: string[];
+  /** Restrict to records in this keyword theme (used by collection packs). */
+  theme?: string;
 }
 
 export interface Search {
@@ -21,6 +24,7 @@ function passesFilters(r: EmojiRecord, f?: SearchFilters): boolean {
   if (f.categories && f.categories.length > 0) {
     if (!r.category || !f.categories.includes(r.category)) return false;
   }
+  if (f.theme && !inCollection(r, f.theme)) return false;
   return true;
 }
 

@@ -70,6 +70,9 @@ export default function Home() {
       if (recs.length >= 6) return recs;
       return search.query("", base); // not enough live data yet → featured
     }
+    if (activePack.theme) {
+      return search.query("", { ...base, theme: activePack.theme });
+    }
     if (activePack.categories) {
       return search.query("", { ...base, categories: activePack.categories });
     }
